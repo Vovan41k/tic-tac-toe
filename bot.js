@@ -11,14 +11,14 @@ const scene = [
     [0, 0, 0],
 ]
 const wins = [
-    [[0,0],[0,1],[0,2]],
-    [[1,0],[1,1],[1,2]],
-    [[2,0],[2,1],[2,2]],
-    [[0,0],[1,0],[2,0]],
-    [[0,1],[1,1],[2,1]],
-    [[0,2],[1,2],[2,2]],
-    [[0,0],[1,1],[2,2]],
-    [[2,0],[1,1],[0,2]],
+    [[0, 0], [0, 1], [0, 2]],
+    [[1, 0], [1, 1], [1, 2]],
+    [[2, 0], [2, 1], [2, 2]],
+    [[0, 0], [1, 0], [2, 0]],
+    [[0, 1], [1, 1], [2, 1]],
+    [[0, 2], [1, 2], [2, 2]],
+    [[0, 0], [1, 1], [2, 2]],
+    [[2, 0], [1, 1], [0, 2]],
 ]
 const signs = ['⬜', '❌', '⚪']
 const renderButtons = (scene) => {
@@ -66,6 +66,30 @@ const renderButtons = (scene) => {
     ]]
 
 }
+const getFreeRandomCoords = (scene) => {
+    for (let x=0; x<scene.length; x+=1){
+        for(let y=0; y<scene[x].length; y+=1){
+            if (scene[x][y]===0){
+                return [x,y]
+            }
+        }
+    }
+}
+const checkIfWin = (scene, wins, sign) => {
+    for (let win of wins) {
+        let points = 0
+        for (let coords of win){
+            const [x,y] = coords
+            if(scene[x][y]===sign){
+                points+=1
+            }
+        }
+        if(points===3){
+            return true
+        }
+    }
+    return false
+}
 
 bot.onText(/\/ttt/, (msg, match) => {
     try {
@@ -85,18 +109,42 @@ bot.onText(/\/ttt/, (msg, match) => {
 
 bot.on('callback_query', (query) => {
     console.log(query.from.id, query.data)
-    const chatId = query.from.id
-    const [x,y] = query.data.split(',')
-    console.log(x,y)
-    scene[x][y] = 1
-    bot.sendMessage(chatId, 'Выполните ход!', {
-        "reply_markup": {
-            "inline_keyboard": renderButtons(scene)
+    try {
+        
+        const chatId = query.from.id
+        const [x, y] = query.data.split(',')
+        console.log(x, y)
+        scene[x][y] = 1
+        if (checkIfWin(scene, wins, 1)){
+            bot.sendMessage(chatId, 'Вы победили, поздравляю!', {
+                "reply_markup": {
+                    "inline_keyboard": renderButtons(scene)  
+                },
+            })
+            return false
+        }
+        const [botX,botY] = getFreeRandomCoords(scene)
+        scene[botX][botY] = 2
+        if (checkIfWin(scene, wins, 2)){
+            bot.sendMessage(chatId, 'Вы проиграли, повезёт в следующий раз', {
+                "reply_markup": {
+                    "inline_keyboard": renderButtons(scene)
+                },
+            })
+            return false
+        }
+        bot.sendMessage(chatId, 'Выполните ход!', {
+            "reply_markup": {
+                "inline_keyboard": renderButtons(scene)
+                
+            },
 
-        },
-
-    });
-    // bot.sendMessage(chatId, str)
+        });
+    } catch (error) {
+        console.log(error)    
+    }
+s
+        // bot.sendMessage(chatId, str)
 })
 
 

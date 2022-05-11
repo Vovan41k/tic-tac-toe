@@ -163,7 +163,7 @@ bot.on('callback_query', (query) => {
         else if (prefix === 't') {
 
             // Получаем ход пользователя
-            const [x, y] = query.data.split(',')
+            const [prefix, x, y] = query.data.split(',')
             console.log(x, y)
             scene[x][y] = 1 //Ставим крестик
             if (checkIfWin(scene, wins, 1)) { //Проверяем не победил ли пользователь

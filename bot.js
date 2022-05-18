@@ -28,49 +28,47 @@ const reset = () => {
         [0, 0, 0],
     ]
 }
-const renderButtons = (scene) => {
-    return [[
-        {
-            text: signs[scene[0][0]],
-            callback_data: "t,0,0",
-        },
-        {
-            text: signs[scene[0][1]],
-            callback_data: "t,0,1",
-        },
-        {
-            text: signs[scene[0][2]],
-            callback_data: "t,0,2",
-        },
-    ],
-    [
-        {
-            text: signs[scene[1][0]],
-            callback_data: "t,1,0",
-        },
-        {
-            text: signs[scene[1][1]],
-            callback_data: "t,1,1",
-        },
-        {
-            text: signs[scene[1][2]],
-            callback_data: "t,1,2",
-        },
-    ],
-    [
-        {
-            text: signs[scene[2][0]],
-            callback_data: "t,2,0",
-        },
-        {
-            text: signs[scene[2][1]],
-            callback_data: "t,2,1",
-        },
-        {
-            text: signs[scene[2][2]],
-            callback_data: "t,2,2",
-        },
-    ]]
+let userPoints = 0
+let botPoints = 0
+const getPoints = () => {
+    return `общий счет игры  (пользователь:бот) ${userPoints}:${botPoints}`
+}
+const renderButtons = (scene, sign) => {
+    return [
+        scene[0].map((num, indexY) => {
+            return {
+                text: signs[scene[0][indexY]],
+                callback_data: `t,0,${indexY},` + sign,
+            }
+        }),
+        [
+            {
+                text: signs[scene[1][0]],
+                callback_data: "t,1,0," + sign,
+            },
+            {
+                text: signs[scene[1][1]],
+                callback_data: "t,1,1," + sign,
+            },
+            {
+                text: signs[scene[1][2]],
+                callback_data: "t,1,2," + sign,
+            },
+        ],
+        [
+            {
+                text: signs[scene[2][0]],
+                callback_data: "t,2,0," + sign,
+            },
+            {
+                text: signs[scene[2][1]],
+                callback_data: "t,2,1," + sign,
+            },
+            {
+                text: signs[scene[2][2]],
+                callback_data: "t,2,2," + sign,
+            },
+        ]]
 
 }
 const random = (num) => {
@@ -139,13 +137,26 @@ bot.onText(/\/ttt/, (msg, match) => {
     try {
         reset()
         const chatId = msg.chat.id;
-        bot.sendMessage(chatId, 'Выполните ход!', {
-            "reply_markup": {
-                "inline_keyboard": renderButtons(scene)
+        if (Math.random() < 0.5) {
+            //ход пользователя
+            bot.sendMessage(chatId, 'Выполните ход!', {
+                "reply_markup": {
+                    "inline_keyboard": renderButtons(scene, 1)
 
-            },
+                },
 
-        });
+            });
+        } else {
+            const [botX, botY] = getFreeRandomCoords(scene)
+            scene[botX][botY] = 1
+            bot.sendMessage(chatId, 'Выполните ход!', {
+                "reply_markup": {
+                    "inline_keyboard": renderButtons(scene, 2)
+
+                },
+
+            });
+        }
     } catch (error) {
         console.log(error)
     }
@@ -163,15 +174,22 @@ bot.on('callback_query', (query) => {
         else if (prefix === 't') {
 
             // Получаем ход пользователя
-            const [prefix, x, y] = query.data.split(',')
+            const [, x, y, strsign] = query.data.split(',')
+            if (scene[x][y] !== 0) {
+                bot.sendMessage(chatId, 'Так ходить нельзя, выберите другую клетку')
+                return false
+            }
+            const sign = +strsign
             console.log(x, y)
-            scene[x][y] = 1 //Ставим крестик
-            if (checkIfWin(scene, wins, 1)) { //Проверяем не победил ли пользователь
+            scene[x][y] = sign //Ставим значок пользователя
+            if (checkIfWin(scene, wins, sign)) { //Проверяем не победил ли пользователь
                 bot.sendMessage(chatId, 'Вы победили, поздравляю!', {
                     "reply_markup": {
-                        "inline_keyboard": renderButtons(scene)
+                        "inline_keyboard": renderButtons(scene) //конец игры
                     },
                 })
+                userPoints += 1
+                bot.sendMessage(chatId, getPoints())
                 reset()
                 return false
             }
@@ -180,26 +198,30 @@ bot.on('callback_query', (query) => {
             if (botX === -1 && botY === -1) {
                 bot.sendMessage(chatId, 'Ничья!', {
                     "reply_markup": {
-                        "inline_keyboard": renderButtons(scene)
+                        "inline_keyboard": renderButtons(scene) //конец игры
                     },
                 })
+                bot.sendMessage(chatId, getPoints())
                 reset()
                 return false
             }
-            scene[botX][botY] = 2 //Ставим нолик
-            if (checkIfWin(scene, wins, 2)) {  //Проверяем не победил ли бот
+            const botsign = sign === 1 ? 2 : 1
+            scene[botX][botY] = botsign //Ставим нолик
+            if (checkIfWin(scene, wins, botsign)) {  //Проверяем не победил ли бот
                 bot.sendMessage(chatId, 'Вы проиграли, повезёт в следующий раз', {
                     "reply_markup": {
-                        "inline_keyboard": renderButtons(scene)
+                        "inline_keyboard": renderButtons(scene) //конец игры
                     },
                 })
+                botPoints += 1
+                bot.sendMessage(chatId, getPoints())
                 reset()
                 return false
             }
             //Предлагаем пользователю сделать ход
             bot.sendMessage(chatId, 'Выполните ход!', {
                 "reply_markup": {
-                    "inline_keyboard": renderButtons(scene)
+                    "inline_keyboard": renderButtons(scene, sign)
 
                 },
 

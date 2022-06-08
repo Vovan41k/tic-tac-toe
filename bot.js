@@ -34,42 +34,14 @@ const getPoints = () => {
     return `общий счет игры  (пользователь:бот) ${userPoints}:${botPoints}`
 }
 const renderButtons = (scene, sign) => {
-    return [
-        scene[0].map((num, indexY) => {
+    return scene.map((row, indexX)=>{
+        return scene[indexX].map((num, indexY) => {
             return {
-                text: signs[scene[0][indexY]],
-                callback_data: `t,0,${indexY},` + sign,
+                text: signs[scene[indexX][indexY]],
+                callback_data: `t,${indexX},${indexY},` + sign,
             }
-        }),
-        [
-            {
-                text: signs[scene[1][0]],
-                callback_data: "t,1,0," + sign,
-            },
-            {
-                text: signs[scene[1][1]],
-                callback_data: "t,1,1," + sign,
-            },
-            {
-                text: signs[scene[1][2]],
-                callback_data: "t,1,2," + sign,
-            },
-        ],
-        [
-            {
-                text: signs[scene[2][0]],
-                callback_data: "t,2,0," + sign,
-            },
-            {
-                text: signs[scene[2][1]],
-                callback_data: "t,2,1," + sign,
-            },
-            {
-                text: signs[scene[2][2]],
-                callback_data: "t,2,2," + sign,
-            },
-        ]]
-
+        })
+    })
 }
 const random = (num) => {
     const res = Math.floor(Math.random() * num)

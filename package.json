@@ -19,11 +19,10 @@
   },
   "homepage": "https://github.com/Vovan41k/tic-tac-toe#readme",
   "dependencies": {
-    "dotenv": "^16.0.0",
-    "node-telegram-bot-api": "^0.57.0",
-    "request": "^2.88.2"
+    "dotenv": "^16.0.1",
+    "node-telegram-bot-api": "^0.58.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.16"
   }
 }

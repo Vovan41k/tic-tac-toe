@@ -33,12 +33,12 @@ let botPoints = 0
 const getPoints = () => {
     return `общий счет игры  (пользователь:бот) ${userPoints}:${botPoints}`
 }
-const renderButtons = (scene, sign) => {
+const renderButtons = (scene, sign, prefix='t') => {
     return scene.map((row, indexX)=>{
         return scene[indexX].map((num, indexY) => {
             return {
                 text: signs[scene[indexX][indexY]],
-                callback_data: `t,${indexX},${indexY},` + sign,
+                callback_data: `${prefix},${indexX},${indexY},` + sign,
             }
         })
     })
@@ -86,6 +86,22 @@ const checkIfWin = (scene, wins, sign) => {
     }
     return false
 }
+
+const player1 = 2076723593
+// const player2
+
+bot.onText(/\/play/, (msg, match) => {
+    reset()
+    bot.sendMessage(player1, 'Ваш ход',
+        {
+            "reply_markup": {
+                "inline_keyboard":renderButtons(scene, 1, 'p')
+            },
+        })
+
+    })
+
+
 bot.onText(/\/start/, (msg, match) => {
     bot.sendMessage(msg.chat.id, 'Чем будете ходить?',
         {
@@ -140,6 +156,22 @@ bot.on('callback_query', (query) => {
 
         const chatId = query.from.id
         const [prefix] = query.data.split(',')
+        
+        if (prefix === 'p') {
+            const [, x, y, strsign] = query.data.split(',')
+            if (scene[x][y] !== 0) {
+                bot.sendMessage(chatId, 'Так ходить нельзя, выберите другую клетку')
+                return false
+            }
+            const sign = +strsign
+            scene[x][y] = sign
+            bot.sendMessage(chatId, 'Ожидаем ход противника', {
+                "reply_markup": {
+                    "inline_keyboard": renderButtons(scene, sign, 'd') //конец игры
+                },
+            })
+        }
+
         if (prefix === 'c') {
 
         }

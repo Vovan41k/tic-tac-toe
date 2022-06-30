@@ -87,18 +87,28 @@ const checkIfWin = (scene, wins, sign) => {
     return false
 }
 
-const player1 = 2076723593
-// const player2
+let player1 
+let player2 
+
+
 
 bot.onText(/\/play/, (msg, match) => {
     reset()
+    if (msg.chat.id === +process.env.ID_VLADIMIR){
+        player1 = +process.env.ID_VLADIMIR
+        player2 = +process.env.ID_VASILIY
+    }
+    else {
+        player2 = +process.env.ID_VLADIMIR
+        player1 = +process.env.ID_VASILIY
+    }
     bot.sendMessage(player1, 'Ваш ход',
         {
             "reply_markup": {
                 "inline_keyboard":renderButtons(scene, 1, 'p')
             },
         })
-
+        bot.sendMessage(player2, 'Ваш соперник совершает ход')
     })
 
 
@@ -165,11 +175,24 @@ bot.on('callback_query', (query) => {
             }
             const sign = +strsign
             scene[x][y] = sign
-            bot.sendMessage(chatId, 'Ожидаем ход противника', {
+            const currentPlayer = chatId    
+            const anotherPlayer = (currentPlayer === player1) ? player2 : player1
+            bot.sendMessage(currentPlayer, 'Ожидаем ход противника', {
                 "reply_markup": {
-                    "inline_keyboard": renderButtons(scene, sign, 'd') //конец игры
+                    "inline_keyboard": renderButtons(scene, sign, 'd')
                 },
             })
+            console.log({anotherPlayer})
+            bot.sendMessage(anotherPlayer, 'Ваш ход', {
+                "reply_markup": {
+                    "inline_keyboard": renderButtons(
+                        scene,
+                        (currentPlayer === player1) ? 2 : 1,
+                        'p'
+                    )
+                },
+            })
+
         }
 
         if (prefix === 'c') {
@@ -237,6 +260,8 @@ bot.on('callback_query', (query) => {
 
     // bot.sendMessage(chatId, str)
 })
-
+bot.on('message',(msg)=>{
+    console.log(msg)
+})
 
 module.exports = bot

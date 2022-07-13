@@ -72,6 +72,7 @@ const getFreeRandomCoords = (scene) => {
     }
 }
 const checkIfWin = (scene, wins, sign) => {
+    console.log(scene, wins, sign)
     for (let win of wins) {
         let points = 0
         for (let coords of win) {
@@ -177,6 +178,37 @@ bot.on('callback_query', (query) => {
             scene[x][y] = sign
             const currentPlayer = chatId    
             const anotherPlayer = (currentPlayer === player1) ? player2 : player1
+            if (checkIfWin(scene, wins, sign)) { //Проверяем не победил ли пользователь
+                bot.sendMessage(chatId, 'Вы победили, поздравляю!', {
+                    "reply_markup": {
+                        "inline_keyboard": renderButtons(scene) //конец игры
+                    },
+                })
+                userPoints += 1
+                bot.sendMessage(chatId, getPoints())
+                bot.sendMessage(chatId === player1?player2:player1, 'Вы проиграли, повезёт в следующий раз', {
+                    "reply_markup": {
+                        "inline_keyboard": renderButtons(scene) //конец игры
+                    },
+                })
+                reset()
+                return false
+            }
+            const [freeX, freeY] = getFreeRandomCoords(scene)
+            if (freeX === -1 && freeY === -1) {
+                bot.sendMessage(player2, 'Ничья!', {
+                    "reply_markup": {
+                        "inline_keyboard": renderButtons(scene) //конец игры
+                    },
+                })
+                bot.sendMessage(player1, 'Ничья!', {
+                    "reply_markup": {
+                        "inline_keyboard": renderButtons(scene) //конец игры
+                    },
+                })
+                reset()
+                return false
+            }
             bot.sendMessage(currentPlayer, 'Ожидаем ход противника', {
                 "reply_markup": {
                     "inline_keyboard": renderButtons(scene, sign, 'd')
